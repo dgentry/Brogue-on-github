@@ -56,6 +56,9 @@
 //#define AUDIT_RNG			// VERY slow, but sometimes necessary to debug out-of-sync recording errors
 //#define GENERATE_FONT_FILES	// Displays font in grid upon startup, which can be screen-captured into font files for PC.
 
+// Use this to silence warnings about unused parameters
+#define UNUSED(x) (void)(x)
+
 #ifdef BROGUE_ASSERTS
 #include <assert.h>
 #endif
