@@ -1234,9 +1234,10 @@ void inflictLethalDamage(creature *attacker, creature *defender) {
 // returns true if this was a killing stroke; does NOT free the pointer, but DOES remove it from the monster chain
 // flashColor indicates the color that the damage will cause the creature to flash
 boolean inflictDamage(creature *attacker, creature *defender, short damage, const color *flashColor) {
+    UNUSED(attacker);
 	boolean killed = false;
 	dungeonFeature theBlood;
-	
+	    
 	if (damage == 0) {
 		return false;
 	}

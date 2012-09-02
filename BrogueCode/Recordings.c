@@ -1218,5 +1218,7 @@ void parseFile() {
 void RNGLog(char *message) {
 #ifdef AUDIT_RNG
 	fputs(message, RNGLogFile);
+#else
+    UNUSED(message);
 #endif
 }

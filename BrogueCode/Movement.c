@@ -29,7 +29,7 @@ void checkForDungeonErrors() {
 	short i, j;
 	for (i=0; i<DCOLS; i++) {
 		for (j=0; j<DROWS; j++) {
-			if (pmap[i][j].layers[DUNGEON] > TORCH_WALL || pmap[i][j].layers[DUNGEON] < 0) {
+			if (pmap[i][j].layers[DUNGEON] > TORCH_WALL) {
 				plotCharWithColor('&', mapToWindowX(i), mapToWindowY(j), black, yellow);
 				printf("\n\nERROR at (%i, %i)!!", i, j);
 			}
