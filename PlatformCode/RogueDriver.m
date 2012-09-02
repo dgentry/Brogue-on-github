@@ -43,11 +43,11 @@ short mouseX, mouseY;
 	short versionNumber;
 	
 	versionNumber = [[NSUserDefaults standardUserDefaults] integerForKey:@"Brogue version"];
-	if (versionNumber == nil || versionNumber < BROGUE_VERSION) {
+	if (versionNumber == 0 || versionNumber < BROGUE_VERSION) {
 		// This is so we know when to purge the relevant preferences and save them anew.
 		[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"NSWindow Frame Brogue main window"];
 		
-		if (versionNumber != nil) {
+		if (versionNumber != 0) {
 			[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"Brogue version"];
 		}
 		[[NSUserDefaults standardUserDefaults] setInteger:BROGUE_VERSION forKey:@"Brogue version"];
@@ -79,6 +79,7 @@ short mouseX, mouseY;
 
 - (IBAction)playBrogue:(id)sender
 {
+    UNUSED(sender);
 //	[fileMenu setAutoenablesItems:NO];
 	rogueMain();
 //	[fileMenu setAutoenablesItems:YES];	
@@ -87,6 +88,7 @@ short mouseX, mouseY;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+    UNUSED(aNotification);
 	[theWindow makeMainWindow];
 	[theWindow makeKeyWindow];
 	[self windowDidResize:nil];
@@ -97,6 +99,7 @@ short mouseX, mouseY;
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
+    UNUSED(aNotification);
 	NSRect theRect;
 	NSSize testSizeBox;
 	NSMutableDictionary *theAttributes = [[NSMutableDictionary alloc] init];
@@ -209,7 +212,8 @@ boolean pauseForMilliseconds(short milliseconds) {
 }
 
 void nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput, boolean colorsDance) {
-	NSEvent *theEvent;
+	UNUSED(textInput);
+    NSEvent *theEvent;
 	NSEventType theEventType;
 	NSPoint event_location;
 	NSPoint local_point;
@@ -459,6 +463,7 @@ void initializeLaunchArguments(enum NGCommands *command, char *path, unsigned lo
 
 void initializeBrogueSaveLocation() {	
     NSFileManager *manager = [NSFileManager defaultManager];
+    NSError *err;
     
     // Look up the full path to the user's Application Support folder (usually ~/Library/Application Support/).
     NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex: 0];
@@ -468,9 +473,8 @@ void initializeBrogueSaveLocation() {
     NSString *supportPath = [basePath stringByAppendingPathComponent: appName];
     
     // Create our folder the first time it is needed.
-    if (![manager fileExistsAtPath: supportPath])
-    {
-        [manager createDirectoryAtPath: supportPath attributes: nil];
+    if (![manager fileExistsAtPath: supportPath]) {
+        [manager createDirectoryAtPath:supportPath withIntermediateDirectories:YES attributes:nil error:&err];
     }
     
     // Set the working directory to this path, so that savegames and recordings will be stored here.
@@ -489,6 +493,7 @@ fileEntry *listFiles(short *fileCount, char **dynamicMemoryBuffer) {
 	fileEntry *fileList;
 	NSArray *array;
 	NSFileManager *manager = [NSFileManager defaultManager];
+    NSError *err;
 	NSDictionary *fileAttributes;
 	NSDateFormatter *dateFormatter;
 	const char *thisFileName;
@@ -500,7 +505,7 @@ fileEntry *listFiles(short *fileCount, char **dynamicMemoryBuffer) {
 	
 	dateFormatter = [[NSDateFormatter alloc] initWithDateFormat:@"%1m/%1d/%y" allowNaturalLanguage:YES];
 	
-	array = [manager directoryContentsAtPath:[manager currentDirectoryPath]];
+	array = [manager contentsOfDirectoryAtPath:[manager currentDirectoryPath] error:&err];
 	count = [array count];
 
 	fileList = malloc((count + ADD_FAKE_PADDING_FILES) * sizeof(fileEntry));
