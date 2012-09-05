@@ -25,12 +25,54 @@
 
 @implementation Viewport
 
+static NSFont *theSlowFont;
+static NSFont *theFastFont;
 NSSize characterSize;
 
 short vPixels = 18;
 short hPixels = 9;
 
 short theFontSize = 13;
+
+// Letting OS X handle the fallback for us produces inconsistent results
+// across versions, and on OS X 10.8 falls back to Emoji Color for some items
+// (e.g. foliage), which doesn't draw correctly at all. So we need to use a
+// cascade list forcing it to fall back to Arial Unicode MS and Apple Symbols,
+// which have the desired characters.
+//
+// Using a cascade list, even an empty one, makes text drawing unusably
+// slower. To fix this, we store two fonts, one "fast" for ASCII characters
+// which we assume Monaco will always be able to handle, and one "slow" for
+// non-ASCII.
+
+- (NSFont *)slowFont {
+	if (!theSlowFont) {
+		NSFont *baseFont = [NSFont fontWithName: @"Monaco" size: theFontSize];
+		NSArray *fallbackDescriptors = [NSArray arrayWithObjects:
+		                                // Arial provides reasonable versions of most characters.
+		                                [NSFontDescriptor fontDescriptorWithName: @"Arial Unicode MS" size: theFontSize],
+		                                // Apple Symbols provides U+26AA, for rings, which Arial does not.
+		                                [NSFontDescriptor fontDescriptorWithName: @"Apple Symbols" size: theFontSize],
+		                                nil];
+		NSDictionary *fodDict = [NSDictionary dictionaryWithObject: fallbackDescriptors forKey: NSFontCascadeListAttribute];
+		NSFontDescriptor *desc = [baseFont.fontDescriptor fontDescriptorByAddingAttributes: fodDict];
+		theSlowFont = [[NSFont fontWithDescriptor: desc size: theFontSize ] retain];
+	}
+	return theSlowFont;
+}
+
+- (NSFont *)fastFont {
+	if (!theFastFont)
+		theFastFont = [[NSFont fontWithName: @"Monaco" size: theFontSize] retain];
+	return theFastFont;
+}
+
+- (NSFont *)fontForString:(NSString *)s {
+	if (s.length == 1 && ([s characterAtIndex:0] < 128))
+		return [self fastFont];
+	else
+		return [self slowFont];
+}
 
 - (id)initWithFrame:(NSRect)rect
 {
@@ -47,8 +89,7 @@ short theFontSize = 13;
 			bgColorArray[i][j] = [[NSColor whiteColor] retain];
 			
 			attributes[i][j] = [[NSMutableDictionary alloc] init];
-			[attributes[i][j] setObject:[NSFont fontWithName: @"Monaco" size: theFontSize]
-						   forKey:NSFontAttributeName];
+			[attributes[i][j] setObject:[self fastFont] forKey:NSFontAttributeName];
 			[attributes[i][j] setObject:[NSColor blackColor]
 						   forKey:NSForegroundColorAttributeName];			
 			rectArray[i][j] = NSMakeRect(HORIZ_PX*i, (VERT_PX * kROWS)-(VERT_PX*(j+1)), HORIZ_PX, VERT_PX);
@@ -83,6 +124,7 @@ short theFontSize = 13;
 	letterArray[x][y] = [c retain];
 	bgColorArray[x][y] = [bgColor retain];
 	[attributes[x][y] setObject:letterColor forKey:NSForegroundColorAttributeName];
+	[attributes[x][y] setObject:[self fontForString:c] forKey:NSFontAttributeName];
 	
 	//[self setNeedsDisplayInRect:rectArray[x][y]];
 	
@@ -135,15 +177,17 @@ short theFontSize = 13;
 
 - (void)drawTheString:(NSString *)theString centeredIn:(NSRect)rect withAttributes:(NSMutableDictionary *)theAttributes
 {
+	//	NSLog(@"theString is '%@'", theString);
+
+	// Assuming a space character is an empty rectangle provides a major
+	// increase in redraw speed.
+	if ( theString.length == 0 || [theString isEqualToString:@" "] ) {
+		return;
+	}
+	
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	NSPoint stringOrigin;
 	NSSize stringSize;
-	
-	//	NSLog(@"theString is '%@'", theString);
-	
-	if ( theString == nil ) {
-		return;
-	}
 	
 	if ( [characterSizeDictionary objectForKey:theString] == nil ) {
 		stringSize = [theString sizeWithAttributes:theAttributes];	// quite expensive
@@ -186,11 +230,12 @@ short theFontSize = 13;
 	hPixels = hPx;
 	vPixels = vPx;
 	theFontSize = size;
+	[theSlowFont release]; theSlowFont = nil;
+	[theFastFont release]; theFastFont = nil;
 	
 	for ( j = 0; j < kROWS; j++ ) {
 		for ( i = 0; i < kCOLS; i++ ) {
-			[attributes[i][j] setObject:[NSFont fontWithName: @"Monaco" size:theFontSize]
-			 forKey:NSFontAttributeName];
+			[attributes[i][j] setObject:[self fontForString:letterArray[i][j]] forKey:NSFontAttributeName];
 			rectArray[i][j] = NSMakeRect(hPixels*i, (vPixels * kROWS)-(vPixels*(j+1)), hPixels, vPixels);
 		}
 	}
