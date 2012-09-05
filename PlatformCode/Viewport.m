@@ -25,12 +25,26 @@
 
 @implementation Viewport
 
+static NSFont *theFont;
 NSSize characterSize;
 
 short vPixels = 18;
 short hPixels = 9;
 
 short theFontSize = 13;
+
+- (NSFont *)defaultFont {
+	if (!theFont) {
+		NSFont *baseFont = [NSFont fontWithName:@"Monaco" size: theFontSize];
+		NSArray *fallbackDescriptors = [NSArray arrayWithObjects:
+		                                [NSFontDescriptor fontDescriptorWithName: @"Arial Unicode MS" size: theFontSize],
+		                                nil];
+		NSDictionary *fodDict = [NSDictionary dictionaryWithObject: fallbackDescriptors forKey: NSFontCascadeListAttribute];
+		NSFontDescriptor *desc = [baseFont.fontDescriptor fontDescriptorByAddingAttributes: fodDict];
+		theFont = [[NSFont fontWithDescriptor: desc size: theFontSize ] retain];
+    }
+    return theFont;
+}
 
 - (id)initWithFrame:(NSRect)rect
 {
@@ -47,8 +61,7 @@ short theFontSize = 13;
 			bgColorArray[i][j] = [[NSColor whiteColor] retain];
 			
 			attributes[i][j] = [[NSMutableDictionary alloc] init];
-			[attributes[i][j] setObject:[NSFont fontWithName: @"Monaco" size: theFontSize]
-						   forKey:NSFontAttributeName];
+			[attributes[i][j] setObject:[self defaultFont] forKey:NSFontAttributeName];
 			[attributes[i][j] setObject:[NSColor blackColor]
 						   forKey:NSForegroundColorAttributeName];			
 			rectArray[i][j] = NSMakeRect(HORIZ_PX*i, (VERT_PX * kROWS)-(VERT_PX*(j+1)), HORIZ_PX, VERT_PX);
@@ -189,8 +202,7 @@ short theFontSize = 13;
 	
 	for ( j = 0; j < kROWS; j++ ) {
 		for ( i = 0; i < kCOLS; i++ ) {
-			[attributes[i][j] setObject:[NSFont fontWithName: @"Monaco" size:theFontSize]
-			 forKey:NSFontAttributeName];
+			[attributes[i][j] setObject:[self defaultFont] forKey:NSFontAttributeName];
 			rectArray[i][j] = NSMakeRect(hPixels*i, (vPixels * kROWS)-(vPixels*(j+1)), hPixels, vPixels);
 		}
 	}
