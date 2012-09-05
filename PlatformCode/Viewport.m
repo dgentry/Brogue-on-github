@@ -37,8 +37,8 @@ short theFontSize = 13;
 // Letting OS X handle the fallback for us produces inconsistent results
 // across versions, and on OS X 10.8 falls back to Emoji Color for some items
 // (e.g. foliage), which doesn't draw correctly at all. So we need to use a
-// cascade list forcing it to fall back to Arial Unicode MS, which has the
-// desired characters.
+// cascade list forcing it to fall back to Arial Unicode MS and Apple Symbols,
+// which have the desired characters.
 //
 // Using a cascade list, even an empty one, makes text drawing unusably
 // slower. To fix this, we store two fonts, one "fast" for ASCII characters
@@ -49,7 +49,10 @@ short theFontSize = 13;
 	if (!theSlowFont) {
 		NSFont *baseFont = [NSFont fontWithName: @"Monaco" size: theFontSize];
 		NSArray *fallbackDescriptors = [NSArray arrayWithObjects:
+		                                // Arial provides reasonable versions of most characters.
 		                                [NSFontDescriptor fontDescriptorWithName: @"Arial Unicode MS" size: theFontSize],
+		                                // Apple Symbols provides U+26AA, for rings, which Arial does not.
+		                                [NSFontDescriptor fontDescriptorWithName: @"Apple Symbols" size: theFontSize],
 		                                nil];
 		NSDictionary *fodDict = [NSDictionary dictionaryWithObject: fallbackDescriptors forKey: NSFontCascadeListAttribute];
 		NSFontDescriptor *desc = [baseFont.fontDescriptor fontDescriptorByAddingAttributes: fodDict];
