@@ -4,7 +4,7 @@
 //
 //  Created by Brian and Kevin Walker on 11/28/08.
 //  Copyright 2012. All rights reserved.
-//  
+//
 //  This file is part of Brogue.
 //
 //  Brogue is free software: you can redistribute it and/or modify
@@ -29,10 +29,12 @@ static NSFont *theSlowFont;
 static NSFont *theFastFont;
 NSSize characterSize;
 
-short vPixels = 18;
-short hPixels = 9;
+short vPixels = VERT_PX;
+short hPixels = HORIZ_PX;
 
-short theFontSize = 13;
+short theFontSize = FONT_SIZE;  // Will get written over when windowDidResize
+NSString *basicFontName = FONT_NAME;
+
 
 // Letting OS X handle the fallback for us produces inconsistent results
 // across versions, and on OS X 10.8 falls back to Emoji Color for some items
@@ -47,23 +49,23 @@ short theFontSize = 13;
 
 - (NSFont *)slowFont {
 	if (!theSlowFont) {
-		NSFont *baseFont = [NSFont fontWithName: @"Monaco" size: theFontSize];
+		NSFont *baseFont = [NSFont fontWithName:basicFontName size:theFontSize];
 		NSArray *fallbackDescriptors = [NSArray arrayWithObjects:
 		                                // Arial provides reasonable versions of most characters.
-		                                [NSFontDescriptor fontDescriptorWithName: @"Arial Unicode MS" size: theFontSize],
+		                                [NSFontDescriptor fontDescriptorWithName:@"Arial Unicode MS" size:theFontSize],
 		                                // Apple Symbols provides U+26AA, for rings, which Arial does not.
-		                                [NSFontDescriptor fontDescriptorWithName: @"Apple Symbols" size: theFontSize],
+		                                [NSFontDescriptor fontDescriptorWithName:@"Apple Symbols" size:theFontSize],
 		                                nil];
-		NSDictionary *fodDict = [NSDictionary dictionaryWithObject: fallbackDescriptors forKey: NSFontCascadeListAttribute];
-		NSFontDescriptor *desc = [baseFont.fontDescriptor fontDescriptorByAddingAttributes: fodDict];
-		theSlowFont = [[NSFont fontWithDescriptor: desc size: theFontSize ] retain];
+		NSDictionary *fodDict = [NSDictionary dictionaryWithObject:fallbackDescriptors forKey:NSFontCascadeListAttribute];
+		NSFontDescriptor *desc = [baseFont.fontDescriptor fontDescriptorByAddingAttributes:fodDict];
+		theSlowFont = [[NSFont fontWithDescriptor:desc size:theFontSize ] retain];
 	}
 	return theSlowFont;
 }
 
 - (NSFont *)fastFont {
 	if (!theFastFont)
-		theFastFont = [[NSFont fontWithName: @"Monaco" size: theFontSize] retain];
+		theFastFont = [[NSFont fontWithName:basicFontName size:theFontSize] retain];
 	return theFastFont;
 }
 
@@ -79,29 +81,29 @@ short theFontSize = 13;
 	if ( ![super initWithFrame:rect] ) {
 		return nil;
 	}
-	
+
 	int i, j;
-	
+
 	for ( j = 0; j < kROWS; j++ ) {
 		for ( i = 0; i < kCOLS; i++ ) {
 			letterArray[i][j] = @" ";
 			[letterArray[i][j] retain];
 			bgColorArray[i][j] = [[NSColor whiteColor] retain];
-			
+
 			attributes[i][j] = [[NSMutableDictionary alloc] init];
 			[attributes[i][j] setObject:[self fastFont] forKey:NSFontAttributeName];
 			[attributes[i][j] setObject:[NSColor blackColor]
-						   forKey:NSForegroundColorAttributeName];			
+						   forKey:NSForegroundColorAttributeName];
 			rectArray[i][j] = NSMakeRect(HORIZ_PX*i, (VERT_PX * kROWS)-(VERT_PX*(j+1)), HORIZ_PX, VERT_PX);
 		}
 	}
-	
+
 	characterSizeDictionary = [[NSMutableDictionary dictionaryWithCapacity:100] retain];
-	
+
 	characterSize = [@"a" sizeWithAttributes:attributes[0][0]]; // no need to do this every time we draw a character
-	
+
 	//NSLog(@"in initWithFrame, rect is (%f, %f)", rect.origin.x, rect.origin.y	);
-	 
+
 	return self;
 }
 
@@ -110,7 +112,7 @@ short theFontSize = 13;
 	return YES;
 }
 
-- (void)setString:(NSString *)c 
+- (void)setString:(NSString *)c
    withBackground:(NSColor *)bgColor
   withLetterColor:(NSColor *)letterColor
 	  atLocationX:(short)x
@@ -118,19 +120,19 @@ short theFontSize = 13;
 {
 	NSRect updateRect;
 	NSSize stringSize;
-		
+
 	[letterArray[x][y] release];
 	[bgColorArray[x][y] release];
 	letterArray[x][y] = [c retain];
 	bgColorArray[x][y] = [bgColor retain];
 	[attributes[x][y] setObject:letterColor forKey:NSForegroundColorAttributeName];
 	[attributes[x][y] setObject:[self fontForString:c] forKey:NSFontAttributeName];
-	
+
 	//[self setNeedsDisplayInRect:rectArray[x][y]];
-	
+
 	stringSize = [[characterSizeDictionary objectForKey:c] sizeValue];
 	stringSize.width += 1;
-	
+
 	if (stringSize.width >= rectArray[x][y].size.width) { // custom update rectangle
 		updateRect.origin.y = rectArray[x][y].origin.y;
 		updateRect.size.height = rectArray[x][y].size.height;
@@ -147,7 +149,7 @@ short theFontSize = 13;
 {
 	int i, j, startX, startY, endX, endY;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
+
 	startX = (int) (rect.origin.x / hPixels);
 	startY = kROWS - (int) ((rect.origin.y + rect.size.height + vPixels - 1 ) / vPixels);
 	endX = (rect.origin.x + rect.size.width + hPixels - 1) / hPixels;
@@ -184,16 +186,16 @@ short theFontSize = 13;
 	if ( theString.length == 0 || [theString isEqualToString:@" "] ) {
 		return;
 	}
-	
+
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	NSPoint stringOrigin;
 	NSSize stringSize;
-	
+
 	if ( [characterSizeDictionary objectForKey:theString] == nil ) {
 		stringSize = [theString sizeWithAttributes:theAttributes];	// quite expensive
 		//	NSLog(@"stringSize for '%@' has width %f and height %f", theString, stringSize.width, stringSize.height);
 		[characterSizeDictionary setObject:[NSValue valueWithSize:stringSize] forKey:theString];
-		
+
 	} else {
 		stringSize = [[characterSizeDictionary objectForKey:theString] sizeValue];
 	}
@@ -202,7 +204,7 @@ short theFontSize = 13;
 	stringOrigin.y = rect.origin.y + (rect.size.height - stringSize.height)/2;
 
 	[theString drawAtPoint:stringOrigin withAttributes:theAttributes];
-	
+
 	[pool drain];
 }
 
@@ -221,6 +223,11 @@ short theFontSize = 13;
 	return theFontSize;
 }
 
+- (NSString *)fontName
+{
+    return basicFontName;
+}
+
 - (void)setHorizPixels:(short)hPx
 		   vertPixels:(short)vPx
 			 fontSize:(short)size
@@ -232,7 +239,7 @@ short theFontSize = 13;
 	theFontSize = size;
 	[theSlowFont release]; theSlowFont = nil;
 	[theFastFont release]; theFastFont = nil;
-	
+
 	for ( j = 0; j < kROWS; j++ ) {
 		for ( i = 0; i < kCOLS; i++ ) {
 			[attributes[i][j] setObject:[self fontForString:letterArray[i][j]] forKey:NSFontAttributeName];
@@ -240,9 +247,9 @@ short theFontSize = 13;
 		}
 	}
 	characterSize = [@"a" sizeWithAttributes:attributes[0][0]];
-	
+
 	[characterSizeDictionary removeAllObjects];
-	
+
 	[pool drain];
 }
 

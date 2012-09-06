@@ -4,7 +4,7 @@
 //
 //  Created by Brian and Kevin Walker.
 //  Copyright 2012. All rights reserved.
-//  
+//
 //  This file is part of Brogue.
 //
 //  Brogue is free software: you can redistribute it and/or modify
@@ -30,6 +30,8 @@
 #define kCOLS		100
 
 #define FONT_SIZE	14
+// This is only the basic font.  There are also fixed-name fallback fonts.
+#define FONT_NAME	@"Courier"
 
 @interface Viewport : NSView
 {
@@ -42,7 +44,7 @@
 
 - (BOOL)isOpaque;
 
-- (void)setString:(NSString *)c 
+- (void)setString:(NSString *)c
    withBackground:(NSColor *)bgColor
   withLetterColor:(NSColor *)letterColor
 	  atLocationX:(short)x
@@ -53,6 +55,7 @@
 - (short)horizPixels;
 - (short)vertPixels;
 - (short)fontSize;
+- (NSString *)fontName;
 - (void)setHorizPixels:(short)hPx
 			vertPixels:(short)vPx
 			  fontSize:(short)size;
