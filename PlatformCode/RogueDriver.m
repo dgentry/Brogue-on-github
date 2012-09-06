@@ -4,7 +4,7 @@
 //
 //  Created by Brian and Kevin Walker on 12/26/08.
 //  Copyright 2012. All rights reserved.
-//  
+//
 //  This file is part of Brogue.
 //
 //  Brogue is free software: you can redistribute it and/or modify
@@ -41,37 +41,37 @@ short mouseX, mouseY;
 	NSSize theSize;
 	//NSRect theRect;
 	short versionNumber;
-	
+
 	versionNumber = [[NSUserDefaults standardUserDefaults] integerForKey:@"Brogue version"];
 	if (versionNumber == 0 || versionNumber < BROGUE_VERSION) {
 		// This is so we know when to purge the relevant preferences and save them anew.
 		[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"NSWindow Frame Brogue main window"];
-		
+
 		if (versionNumber != 0) {
 			[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"Brogue version"];
 		}
 		[[NSUserDefaults standardUserDefaults] setInteger:BROGUE_VERSION forKey:@"Brogue version"];
 		[[NSUserDefaults standardUserDefaults] synchronize];
 	}
-		
-	
+
+
 	theMainDisplay = theDisplay;
 	[theWindow setFrameAutosaveName:@"Brogue main window"];
 	[theWindow useOptimizedDrawing:YES];
 	[theWindow setAcceptsMouseMovedEvents:YES];
-	
+
 	theSize.height = kROWS;
 	theSize.width = kCOLS;
 	[theWindow setContentResizeIncrements:theSize];
-	
+
 	theSize.height = 7 * VERT_PX * kROWS / FONT_SIZE;
 	theSize.width = 7 * HORIZ_PX * kCOLS / FONT_SIZE;
 	[theWindow setContentMinSize:theSize];
-	
+
 	mouseX = mouseY = 0;
-	
+
 	/*theRect = [theWindow contentRectForFrameRect:[theWindow frame]];
-	
+
 	if (theRect) {
 		[theMainDisplay setHorizPixels:(theWidth / kCOLS) vertPixels:(theHeight / kROWS) fontSize:max(theSize - 2, 9)];
 	}*/
@@ -82,7 +82,7 @@ short mouseX, mouseY;
     UNUSED(sender);
 //	[fileMenu setAutoenablesItems:NO];
 	rogueMain();
-//	[fileMenu setAutoenablesItems:YES];	
+//	[fileMenu setAutoenablesItems:YES];
 	//exit(0);
 }
 
@@ -100,20 +100,26 @@ short mouseX, mouseY;
 - (void)windowDidResize:(NSNotification *)aNotification
 {
     UNUSED(aNotification);
-	NSRect theRect;
-	NSSize testSizeBox;
-	NSMutableDictionary *theAttributes = [[NSMutableDictionary alloc] init];
-	short theWidth, theHeight, theSize;
-	
-	theRect = [theWindow contentRectForFrameRect:[theWindow frame]];
-	theWidth = theRect.size.width;
-	theHeight = theRect.size.height;
-	theSize = min(FONT_SIZE * theWidth / (HORIZ_PX * kCOLS), FONT_SIZE * theHeight / (VERT_PX * kROWS));
-	do {
-		[theAttributes setObject:[NSFont fontWithName:[theMainDisplay fontName] size:theSize++] forKey:NSFontAttributeName];
-		testSizeBox = [@"a" sizeWithAttributes:theAttributes];
-	} while (testSizeBox.width < theWidth / kCOLS && testSizeBox.height < theHeight / kROWS);
-	[theMainDisplay setHorizPixels:(theWidth / kCOLS) vertPixels:(theHeight / kROWS) fontSize:max(theSize, 9)];
+    NSRect theRect;
+    NSSize testSizeBox;
+    NSMutableDictionary *theAttributes = [[NSMutableDictionary alloc] init];
+    short theWidth, theHeight, theSize;
+
+    theRect = [theWindow contentRectForFrameRect:[theWindow frame]];
+    theWidth = theRect.size.width;
+    theHeight = theRect.size.height;
+    theSize = min(FONT_SIZE * theWidth / (HORIZ_PX * kCOLS), FONT_SIZE * theHeight / (VERT_PX * kROWS));
+    //NSLog(@"Start theSize=%d (w=%d, h=%d)", theSize, theWidth, theHeight);
+    do {
+        [theAttributes setObject:[NSFont fontWithName:[theMainDisplay fontName] size:theSize] forKey:NSFontAttributeName];
+	testSizeBox = [@"a" sizeWithAttributes:theAttributes];
+	//NSLog(@"theSize=%d testSizeBox w=%f, h=%f", theSize, testSizeBox.width, testSizeBox.height);
+	theSize++;
+    } while (testSizeBox.width < theWidth / kCOLS && testSizeBox.height < theHeight / kROWS);
+    // Now theSize is one more than what was passed in to fontWithName:size:.  Also need to subtract 1 to get to the
+    // last box that fit.
+    [theMainDisplay setHorizPixels:(theWidth / kCOLS) vertPixels:(theHeight / kROWS) fontSize:max(theSize - 2, 9)];
+    //NSLog(@"End theSize=%d (w=%d, h=%d)  (tW/kC=%f, tH/kR=%f)", theSize, theWidth, theHeight, (theWidth / (float)kCOLS), (theHeight / (float)kROWS));
     [theAttributes release];
 }
 
@@ -128,16 +134,16 @@ short mouseX, mouseY;
 		theRect.size.width = (HORIZ_PX - 1) * kCOLS;
 		theRect.size.height = (VERT_PX - 2) * kROWS;
 	}
-	
+
 	theRect.origin = [window contentRectForFrameRect:[window frame]].origin;
 	theRect.origin.y += ([window contentRectForFrameRect:[window frame]].size.height - theRect.size.height);
-	
+
 	if (theRect.origin.x + theRect.size.width > defaultFrame.size.width) {
 		theRect.origin.x = defaultFrame.size.width - theRect.size.width;
 	}
 	if (theRect.origin.y + theRect.size.height > defaultFrame.size.height) {
 		theRect.origin.y = defaultFrame.size.height - theRect.size.height;
-	} 
+	}
 	theRect = [theWindow frameRectForContentRect:theRect];
 	return theRect;
 }
@@ -152,7 +158,7 @@ void plotChar(uchar inputChar,
 			  short foreRed, short foreGreen, short foreBlue,
 			  short backRed, short backGreen, short backBlue) {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
+
 	[theMainDisplay setString:[NSString stringWithCharacters:&inputChar length:1]
 			   withBackground:[NSColor colorWithDeviceRed:((float)backRed/100)
 													green:((float)backGreen/100)
@@ -180,7 +186,7 @@ boolean pauseForMilliseconds(short milliseconds) {
 	NSEvent *theEvent;
 	NSDate *theDate;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
+
 	if (pauseStartDate) {
 		theDate = [pauseStartDate addTimeInterval: ((double) milliseconds / 1000)];
 		[pauseStartDate release];
@@ -188,7 +194,7 @@ boolean pauseForMilliseconds(short milliseconds) {
 	} else {
 		theDate = [NSDate dateWithTimeIntervalSinceNow: (double) milliseconds / 1000];
 	}
-	
+
 	do {
 		theEvent = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:theDate
 										 inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -206,7 +212,7 @@ boolean pauseForMilliseconds(short milliseconds) {
 			[NSApp sendEvent:theEvent];
 		}
 	} while (theEvent != nil);
-	
+
 	[pool drain];
 	return false;
 }
@@ -218,15 +224,15 @@ void nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput, boolean col
 	NSPoint event_location;
 	NSPoint local_point;
 	short x, y;
-	
+
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
+
 	for(;;) {
 		if (colorsDance) {
 			shuffleTerrainColors(3, true);
 			commitDraws();
 		}
-		
+
 		theEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 									  untilDate:[NSDate dateWithTimeIntervalSinceNow: ((NSTimeInterval) ((double) 50) / ((double) 1000))]
 										 inMode:NSDefaultRunLoopMode
@@ -296,7 +302,7 @@ void nextKeyOrMouseEvent(rogueEvent *returnEvent, boolean textInput, boolean col
 	}
 	// printf("\nRogueEvent: eventType: %i, param1: %i, param2: %i, controlKey: %s, shiftKey: %s", returnEvent->eventType, returnEvent->param1,
 	//			 returnEvent->param2, returnEvent->controlKey ? "true" : "false", returnEvent->shiftKey ? "true" : "false");
-	
+
 	[pool drain];
 }
 
@@ -311,43 +317,43 @@ boolean shiftKeyIsDown() {
 void initHighScores() {
 	NSMutableArray *scoresArray, *textArray, *datesArray;
 	short j, theCount;
-	
+
 	if ([[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores scores"] == nil
 		|| [[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores text"] == nil
 		|| [[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores dates"] == nil) {
-		
+
 		scoresArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
 		textArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
 		datesArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
-		
+
 		for (j=0; j<HIGH_SCORES_COUNT; j++) {
 			[scoresArray addObject:[NSNumber numberWithLong:0]];
 			[textArray addObject:[NSString string]];
 			[datesArray addObject:[NSDate date]];
 		}
-		
+
 		[[NSUserDefaults standardUserDefaults] setObject:scoresArray forKey:@"high scores scores"];
 		[[NSUserDefaults standardUserDefaults] setObject:textArray forKey:@"high scores text"];
 		[[NSUserDefaults standardUserDefaults] setObject:datesArray forKey:@"high scores dates"];
 	}
-	
+
 	theCount = [[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores scores"] count];
-	
+
 	if (theCount < HIGH_SCORES_COUNT) { // backwards compatibility
 		scoresArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
 		textArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
 		datesArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
-		
+
 		[scoresArray setArray:[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores scores"]];
 		[textArray setArray:[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores text"]];
 		[datesArray setArray:[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores dates"]];
-		
+
 		for (j=theCount; j<HIGH_SCORES_COUNT; j++) {
 			[scoresArray addObject:[NSNumber numberWithLong:0]];
 			[textArray addObject:[NSString string]];
 			[datesArray addObject:[NSDate date]];
 		}
-		
+
 		[[NSUserDefaults standardUserDefaults] setObject:scoresArray forKey:@"high scores scores"];
 		[[NSUserDefaults standardUserDefaults] setObject:textArray forKey:@"high scores text"];
 		[[NSUserDefaults standardUserDefaults] setObject:datesArray forKey:@"high scores dates"];
@@ -362,21 +368,21 @@ short getHighScoresList(rogueHighScoresEntry returnList[HIGH_SCORES_COUNT]) {
 	short i, j, maxIndex, mostRecentIndex;
 	long maxScore;
 	boolean scoreTaken[HIGH_SCORES_COUNT];
-	
+
 	// no scores have been taken
 	for (i=0; i<HIGH_SCORES_COUNT; i++) {
 		scoreTaken[i] = false;
 	}
-	
+
 	initHighScores();
-	
+
 	scoresArray = [[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores scores"];
 	textArray = [[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores text"];
 	datesArray = [[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores dates"];
-	
+
 	mostRecentDate = [NSDate distantPast];
 	dateFormatter = [[NSDateFormatter alloc] initWithDateFormat:@"%1m/%1d/%y" allowNaturalLanguage:YES];
-	
+
 	// store each value in order into returnList
 	for (i=0; i<HIGH_SCORES_COUNT; i++) {
 		// find the highest value that hasn't already been taken
@@ -392,7 +398,7 @@ short getHighScoresList(rogueHighScoresEntry returnList[HIGH_SCORES_COUNT]) {
 		returnList[i].score = [[scoresArray objectAtIndex:maxIndex] longValue];
 		strcpy(returnList[i].description, [[textArray objectAtIndex:maxIndex] cStringUsingEncoding:NSASCIIStringEncoding]);
 		strcpy(returnList[i].date, [[dateFormatter stringFromDate:[datesArray objectAtIndex:maxIndex]] cStringUsingEncoding:NSASCIIStringEncoding]);
-		
+
 		// if this is the most recent score we've seen so far
 		if ([mostRecentDate compare:[datesArray objectAtIndex:maxIndex]] == NSOrderedAscending) {
 			mostRecentDate = [datesArray objectAtIndex:maxIndex];
@@ -410,21 +416,21 @@ boolean saveHighScore(rogueHighScoresEntry theEntry) {
 	NSMutableArray *scoresArray, *textArray, *datesArray;
 	NSNumber *newScore;
 	NSString *newText;
-	
+
 	short j, minIndex = -1;
 	long minScore = theEntry.score;
-	
+
 	// generate high scores if prefs don't exist or contain no high scores data
 	initHighScores();
-	
+
 	scoresArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
 	textArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
 	datesArray = [NSMutableArray arrayWithCapacity:HIGH_SCORES_COUNT];
-	
+
 	[scoresArray setArray:[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores scores"]];
 	[textArray setArray:[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores text"]];
 	[datesArray setArray:[[NSUserDefaults standardUserDefaults] arrayForKey:@"high scores dates"]];
-	
+
 	// find the lowest value
 	for (j=0; j<HIGH_SCORES_COUNT; j++) {
 		if ([[scoresArray objectAtIndex:j] longValue] < minScore) {
@@ -432,23 +438,23 @@ boolean saveHighScore(rogueHighScoresEntry theEntry) {
 			minIndex = j;
 		}
 	}
-	
+
 	if (minIndex == -1) { // didn't qualify
 		return false;
 	}
-	
+
 	// minIndex identifies the score entry to be replaced
 	newScore = [NSNumber numberWithLong:theEntry.score];
 	newText = [NSString stringWithCString:theEntry.description encoding:NSASCIIStringEncoding];
 	[scoresArray replaceObjectAtIndex:minIndex withObject:newScore];
 	[textArray replaceObjectAtIndex:minIndex withObject:newText];
 	[datesArray replaceObjectAtIndex:minIndex withObject:[NSDate date]];
-	
+
 	[[NSUserDefaults standardUserDefaults] setObject:scoresArray forKey:@"high scores scores"];
 	[[NSUserDefaults standardUserDefaults] setObject:textArray forKey:@"high scores text"];
 	[[NSUserDefaults standardUserDefaults] setObject:datesArray forKey:@"high scores dates"];
 	[[NSUserDefaults standardUserDefaults] synchronize];
-	
+
 	return true;
 }
 
@@ -456,27 +462,27 @@ void initializeLaunchArguments(enum NGCommands *command, char *path, unsigned lo
 	*command = NG_NOTHING;
 	path[0] = '\0';
 	*seed = 0;
-	
+
 //	*command = NG_NEW_GAME_WITH_SEED;
 //	*seed = 30;
 }
 
-void initializeBrogueSaveLocation() {	
+void initializeBrogueSaveLocation() {
     NSFileManager *manager = [NSFileManager defaultManager];
     NSError *err;
-    
+
     // Look up the full path to the user's Application Support folder (usually ~/Library/Application Support/).
     NSString *basePath = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) objectAtIndex: 0];
-    
+
     // Use a folder under Application Support named after the application.
     NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleName"];
     NSString *supportPath = [basePath stringByAppendingPathComponent: appName];
-    
+
     // Create our folder the first time it is needed.
     if (![manager fileExistsAtPath: supportPath]) {
         [manager createDirectoryAtPath:supportPath withIntermediateDirectories:YES attributes:nil error:&err];
     }
-    
+
     // Set the working directory to this path, so that savegames and recordings will be stored here.
     [manager changeCurrentDirectoryPath: supportPath];
 }
@@ -497,20 +503,20 @@ fileEntry *listFiles(short *fileCount, char **dynamicMemoryBuffer) {
 	NSDictionary *fileAttributes;
 	NSDateFormatter *dateFormatter;
 	const char *thisFileName;
-	
+
 	char tempString[500];
-	
+
 	bufferPosition = bufferSize = 0;
 	*dynamicMemoryBuffer = NULL;
-	
+
 	dateFormatter = [[NSDateFormatter alloc] initWithDateFormat:@"%1m/%1d/%y" allowNaturalLanguage:YES];
-	
+
 	array = [manager contentsOfDirectoryAtPath:[manager currentDirectoryPath] error:&err];
 	count = [array count];
 
 	fileList = malloc((count + ADD_FAKE_PADDING_FILES) * sizeof(fileEntry));
 	offsets = malloc((count + ADD_FAKE_PADDING_FILES) * sizeof(unsigned long));
-	
+
 	for (i=0; i < count + ADD_FAKE_PADDING_FILES; i++) {
 		if (i < count) {
 			thisFileName = [[array objectAtIndex:i] cStringUsingEncoding:NSASCIIStringEncoding];
@@ -525,26 +531,26 @@ fileEntry *listFiles(short *fileCount, char **dynamicMemoryBuffer) {
 		}
 
 		thisFileNameLength = strlen(thisFileName);
-		
+
 		if (thisFileNameLength + bufferPosition > bufferSize) {
 			bufferSize += sizeof(char) * 1024;
 			*dynamicMemoryBuffer = (char *) realloc(*dynamicMemoryBuffer, bufferSize);
 		}
-		
+
 		offsets[i] = bufferPosition; // Have to store these as offsets instead of pointers, as realloc could invalidate pointers.
-		
+
 		strcpy(&((*dynamicMemoryBuffer)[bufferPosition]), thisFileName);
 		bufferPosition += thisFileNameLength + 1;
 	}
-	
+
 	// Convert the offsets to pointers.
 	for (i = 0; i < count + ADD_FAKE_PADDING_FILES; i++) {
 		fileList[i].path = &((*dynamicMemoryBuffer)[offsets[i]]);
 	}
-	
+
 	free(offsets);
     [dateFormatter release];
-	
+
 	*fileCount = count + ADD_FAKE_PADDING_FILES;
 	return fileList;
 }
