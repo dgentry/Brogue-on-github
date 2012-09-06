@@ -110,10 +110,10 @@ short mouseX, mouseY;
 	theHeight = theRect.size.height;
 	theSize = min(FONT_SIZE * theWidth / (HORIZ_PX * kCOLS), FONT_SIZE * theHeight / (VERT_PX * kROWS));
 	do {
-		[theAttributes setObject:[NSFont fontWithName: @"Monaco" size:theSize++] forKey:NSFontAttributeName];
+		[theAttributes setObject:[NSFont fontWithName:[theMainDisplay fontName] size:theSize++] forKey:NSFontAttributeName];
 		testSizeBox = [@"a" sizeWithAttributes:theAttributes];
 	} while (testSizeBox.width < theWidth / kCOLS && testSizeBox.height < theHeight / kROWS);
-	[theMainDisplay setHorizPixels:(theWidth / kCOLS) vertPixels:(theHeight / kROWS) fontSize:max(theSize - 2, 9)];
+	[theMainDisplay setHorizPixels:(theWidth / kCOLS) vertPixels:(theHeight / kROWS) fontSize:max(theSize, 9)];
     [theAttributes release];
 }
 
