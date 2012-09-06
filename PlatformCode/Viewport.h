@@ -29,9 +29,11 @@
 #define kROWS		(30+3+1)
 #define kCOLS		100
 
-#define FONT_SIZE	14
+// This is only used as a starting point for the calculation after the
+// window resizes.
+#define FONT_SIZE	10
 // This is only the basic font.  There are also fixed-name fallback fonts.
-#define FONT_NAME	@"Courier"
+#define FONT_NAME	@"Monaco"
 
 @interface Viewport : NSView
 {
