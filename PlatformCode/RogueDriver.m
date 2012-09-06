@@ -39,7 +39,6 @@ short mouseX, mouseY;
 {
 	extern Viewport *theMainDisplay;
 	NSSize theSize;
-	//NSRect theRect;
 	short versionNumber;
 
 	versionNumber = [[NSUserDefaults standardUserDefaults] integerForKey:@"Brogue version"];
@@ -53,7 +52,6 @@ short mouseX, mouseY;
 		[[NSUserDefaults standardUserDefaults] setInteger:BROGUE_VERSION forKey:@"Brogue version"];
 		[[NSUserDefaults standardUserDefaults] synchronize];
 	}
-
 
 	theMainDisplay = theDisplay;
 	[theWindow setFrameAutosaveName:@"Brogue main window"];
@@ -69,12 +67,6 @@ short mouseX, mouseY;
 	[theWindow setContentMinSize:theSize];
 
 	mouseX = mouseY = 0;
-
-	/*theRect = [theWindow contentRectForFrameRect:[theWindow frame]];
-
-	if (theRect) {
-		[theMainDisplay setHorizPixels:(theWidth / kCOLS) vertPixels:(theHeight / kROWS) fontSize:max(theSize - 2, 9)];
-	}*/
 }
 
 - (IBAction)playBrogue:(id)sender
